@@ -65,8 +65,8 @@ runs:
           mkdir -p $dest_scripts_path
           cp -rf  $source_scripts_path/* $dest_scripts_path/
 
-          echo Updating permissions of the copied scripts
-          ls $dest_scripts_path | grep .sh$ | xargs -I % chmod +x $dest_scripts_path/%  
+          # echo Updating permissions of the copied scripts
+          # ls $dest_scripts_path | grep .sh$ | xargs -I % chmod +x $dest_scripts_path/%  
         fi
 
     - name: Delete checkout folder
