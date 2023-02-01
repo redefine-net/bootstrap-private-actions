@@ -35,7 +35,7 @@ runs:
       shell: bash
       run: |
         checkout_path=`mktemp -d`
-        echo "checkout-path=$checkout_path" >> GITHUB_OUTPUT
+        echo "checkout-path=$checkout_path" >> $GITHUB_OUTPUT
         echo Destination path for actions: $checkout_path
 
     - name: Checkout source repository
