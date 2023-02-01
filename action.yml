@@ -34,7 +34,8 @@ runs:
       id: config
       shell: bash
       run: |
-        checkout_path=`mktemp -d`
+        temp_file=`mktemp -u`
+        checkout_path="$GITHUB_WORKSPACE/`basename $temp_file`"
         echo "checkout-path=$checkout_path" >> $GITHUB_OUTPUT
         echo Destination path for actions: $checkout_path
 
