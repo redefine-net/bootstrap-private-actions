@@ -56,6 +56,9 @@ runs:
           echo Copying actions from $source_actions_path to $dest_actions_path
           mkdir -p $dest_actions_path
           cp -rf  $source_actions_path/* $dest_actions_path/
+
+          copied_actions=`realpath $dest_actions_path | xargs find`
+          echo "::debug::Copied action files: $copied_actions"
         fi
 
         source_scripts_path=${{ steps.config.outputs.checkout-path }}/${{ inputs.source-scripts-path }}
@@ -64,6 +67,9 @@ runs:
           echo Copying scripts from $source_scripts_path to $dest_scripts_path
           mkdir -p $dest_scripts_path
           cp -rf  $source_scripts_path/* $dest_scripts_path/
+
+          copied_scripts=`realpath $dest_scripts_path | xargs find`
+          echo "::debug::Copied script files: $copied_scripts"
 
           # echo Updating permissions of the copied scripts
           # ls $dest_scripts_path | grep .sh$ | xargs -I % chmod +x $dest_scripts_path/%  
