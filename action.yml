@@ -1,0 +1,83 @@
+name: Bootstrap Private Actions
+description: Allows copying and bootstrapping GitHub actions from one private repository to another
+inputs:
+  source-repo:
+    description: Source GitHub repository, like 'octokit/request-action'
+    required: true
+  checkout-pat:
+    description: GitHub PAT token with permissions allowing to checkout code from the source repository
+    required: true
+  source-ref:
+    description: Git ref to use while checking out the source repository, 'main' by default
+    required: false
+    default: main
+  source-actions-path:
+    description: Path to the folder containing actions under the source repository, '.github/actions' by default
+    required: false
+    default: .github/actions
+  source-scripts-path:
+    description: Path to the folder containing supporting scripts under the source repository, '.github/scripts' by default
+    required: false
+    default: .github/scripts
+  destination-actions-path:
+    description: Path to the destination folder under the current working folder that will hold the actions, '.github/actions' by default
+    required: false
+    default: .github/actions
+  destination-scripts-path:
+    description: Path to the destination folder under the current working folder that will hold the scripts, '.github/scripts' by default
+    required: false
+    default: .github/scripts
+runs:
+  using: composite
+  steps:
+    - name: Prepare checkout path
+      id: config
+      shell: bash
+      run: |
+        temp_file=`mktemp -u`
+        checkout_path="$GITHUB_WORKSPACE/`basename $temp_file`"
+        echo "checkout-path=$checkout_path" >> $GITHUB_OUTPUT
+        echo Destination path for actions: $checkout_path
+
+    - name: Checkout source repository
+      uses: actions/checkout@v3
+      with:
+        token: ${{ inputs.checkout-pat }}
+        repository: ${{ inputs.source-repo }}
+        ref: ${{ inputs.source-ref }}
+        path: ${{ steps.config.outputs.checkout-path }}
+
+    - name: Bootstrap actions
+      shell: bash
+      run: |
+        source_actions_path=${{ steps.config.outputs.checkout-path }}/${{ inputs.source-actions-path }}
+        if [ -d $source_actions_path ]; then
+          dest_actions_path=./${{ inputs.destination-actions-path }}
+          echo Copying actions from $source_actions_path to $dest_actions_path
+          mkdir -p $dest_actions_path
+          cp -rf  $source_actions_path/* $dest_actions_path/
+
+          copied_actions=`realpath $dest_actions_path | xargs find`
+          echo "::debug::Copied action files: $copied_actions"
+        fi
+
+        source_scripts_path=${{ steps.config.outputs.checkout-path }}/${{ inputs.source-scripts-path }}
+        if [ -d $source_scripts_path ]; then
+          dest_scripts_path=./${{ inputs.destination-scripts-path }}
+          echo Copying scripts from $source_scripts_path to $dest_scripts_path
+          mkdir -p $dest_scripts_path
+          cp -rf  $source_scripts_path/* $dest_scripts_path/
+
+          copied_scripts=`realpath $dest_scripts_path | xargs find`
+          echo "::debug::Copied script files: $copied_scripts"
+
+          # echo Updating permissions of the copied scripts
+          # ls $dest_scripts_path | grep .sh$ | xargs -I % chmod +x $dest_scripts_path/%  
+        fi
+
+    - name: Delete checkout folder
+      if: ${{ always() }}
+      shell: bash
+      run: |
+        echo Removing the folder ${{ steps.config.outputs.checkout-path }}
+        rm -rf ${{ steps.config.outputs.checkout-path }}
